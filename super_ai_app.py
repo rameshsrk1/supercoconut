@@ -271,27 +271,6 @@ import datetime
 import re
 import markdown
 
-# -------------------
-# Mode selection
-# -------------------
-mode = st.radio("Select Mode:", ["Normal Mode", "DeepThink Mode"])
-
-# -------------------
-# Helper functions
-# -------------------
-def rule_based_ai(user_query):
-    # Example: simple rule-based reply
-    if "profit" in user_query.lower():
-        return "You can make a profit if buying price < fair price."
-    return "I did not understand. Try asking about fair price or profit."
-
-def gpt_ai(user_query):
-    # Placeholder for real AI call (LLM)
-    return f"AI processed your query: {user_query}"
-
-def auto_chart(price, unit="kg"):
-    # Placeholder function for generating chart
-    pass
 
 # -------------------
 # Initialize session state
