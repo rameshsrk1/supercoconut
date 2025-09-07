@@ -9,6 +9,8 @@ from langchain.llms.base import LLM
 from huggingface_hub import InferenceClient
 import datetime
 
+import markdown
+
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
