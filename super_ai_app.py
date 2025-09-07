@@ -204,7 +204,7 @@ def gpt_ai(user_query: str) -> str:
     instructions = """
     You are an AI assistant for coconut trading.
     Rules:
-    - Fair Price/kg = (outturn × copra_price + husk_value) ÷ 1000
+    - Fair Price/kg = (outturn ×10 × copra_price + husk_value) ÷ 1000
     - Fair Price/piece = Fair Price/kg × coconut_weight
     - Profit/Loss per 1000kg = (FairPrice/kg - BuyingPrice/kg) × 1000
     - Profit/Loss per 1000kg batch (piece) = (FairPrice/piece - BuyingPrice/piece) × (1000 ÷ coconut_weight)
