@@ -7,6 +7,8 @@ from typing import List, Optional
 from pydantic import PrivateAttr
 from langchain.llms.base import LLM
 from huggingface_hub import InferenceClient
+import datetime
+
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
@@ -267,19 +269,119 @@ st.subheader("💬 Coconut AI Chat")
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Container for chat history (scrollable)
-chat_container = st.container()
-with chat_container:
-    for sender, msg in reversed(st.session_state.chat_history):
-        st.markdown(f"**{'🧑' if sender=='You' else '🤖'} {sender}:** {msg}")
+chat_box_id = "chat-box"
 
-# Spacer to push input box down
+# CSS for WhatsApp-like chat
+chat_css = f"""
+<style>
+.chat-box {{
+    height: 450px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #e5ddd5; /* WhatsApp background */
+    display: flex;
+    flex-direction: column;
+}}
+.msg-row {{
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}}
+.user-row {{
+    justify-content: flex-end;
+}}
+.ai-row {{
+    justify-content: flex-start;
+}}
+.profile-icon {{
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin: 0 6px;
+}}
+.chat-bubble {{
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 70%;
+    word-wrap: break-word;
+    font-size: 15px;
+    position: relative;
+}}
+.user-msg {{
+    background-color: #dcf8c6;
+    border-bottom-right-radius: 0;
+    text-align: left;
+}}
+.ai-msg {{
+    background-color: #fff;
+    border-bottom-left-radius: 0;
+    text-align: left;
+}}
+.timestamp {{
+    font-size: 11px;
+    color: gray;
+    margin-top: 2px;
+    text-align: right;
+}}
+</style>
+"""
+st.markdown(chat_css, unsafe_allow_html=True)
+
+# Build chat HTML
+chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
+for sender, msg, ts in st.session_state.chat_history:
+    time_str = ts.strftime("%H:%M")
+    if sender == "You":
+        chat_html += f"""
+        <div class='msg-row user-row'>
+            <div class='chat-bubble user-msg'>
+                {msg}
+                <div class='timestamp'>{time_str}</div>
+            </div>
+            <div class='profile-icon'>🧑</div>
+        </div>
+        """
+    else:
+        chat_html += f"""
+        <div class='msg-row ai-row'>
+            <div class='profile-icon'>🤖</div>
+            <div class='chat-bubble ai-msg'>
+                {msg}
+                <div class='timestamp'>{time_str}</div>
+            </div>
+        </div>
+        """
+chat_html += "</div>"
+
+# Render chat
+st.markdown(chat_html, unsafe_allow_html=True)
+
+# Auto-scroll script
+scroll_js = f"""
+<script>
+    var chatBox = document.getElementById('{chat_box_id}');
+    if (chatBox) {{
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }}
+</script>
+"""
+st.markdown(scroll_js, unsafe_allow_html=True)
+
+# Spacer
 st.markdown("---")
 
-# Chat input stays at bottom
-user_query = st.text_input("Ask a question...", key="chat_input")
+# Chat input
+user_query = st.text_input("Type a message...", key="chat_input")
 
 if user_query:
+    # AI response
     if mode == "Normal Mode":
         reply = rule_based_ai(user_query)
     else:
@@ -293,8 +395,11 @@ if user_query:
                 else:
                     auto_chart(planned_price, "kg")
 
-    st.session_state.chat_history.append(("You", user_query))
-    st.session_state.chat_history.append(("AI", reply))
-   # ✅ Clear input box instead of rerun loop
-   # st.session_state.chat_input = ""
-   # st.experimental_rerun()
+    # Store messages with timestamp
+    now = datetime.datetime.now()
+    st.session_state.chat_history.append(("You", user_query, now))
+    st.session_state.chat_history.append(("AI", reply, now))
+
+    # Clear input & rerun
+    st.session_state["chat_input"] = ""
+    st.experimental_rerun()
