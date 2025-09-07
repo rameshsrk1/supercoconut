@@ -7,3 +7,4 @@ requests
 huggingface-hub
 langchain
 pydantic
+markdown
