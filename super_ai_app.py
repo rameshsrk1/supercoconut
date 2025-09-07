@@ -351,21 +351,16 @@ chat_css = f"""
 """
 st.markdown(chat_css, unsafe_allow_html=True)
 
-# Build chat HTML
+# Final assembled chat HTML
 chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
 for sender, msg, ts in st.session_state.chat_history:
     time_str = ts.strftime("%H:%M")
-    
-    # Convert Markdown to HTML and remove outer <p> tags
-    msg_html = markdown.markdown(msg, extensions=['nl2br', 'fenced_code'])
-    msg_html = re.sub(r'^<p>(.*)</p>$', r'\1', msg_html)
-    msg_html = msg_html.replace("<p>", "").replace("</p>", "")
-    
+
     if sender == "You":
         chat_html += f"""
         <div class='msg-row user-row'>
             <div class='chat-bubble user-msg'>
-                {msg_html}
+                {msg}
                 <div class='timestamp'>{time_str}</div>
             </div>
             <div class='profile-icon'>🧑</div>
@@ -376,14 +371,14 @@ for sender, msg, ts in st.session_state.chat_history:
         <div class='msg-row ai-row'>
             <div class='profile-icon'>🤖</div>
             <div class='chat-bubble ai-msg'>
-                {msg_html}
+                {msg}
                 <div class='timestamp'>{time_str}</div>
             </div>
         </div>
         """
 chat_html += "</div>"
 
-# Render chat
+# ✅ Render HTML instead of showing as text
 st.markdown(chat_html, unsafe_allow_html=True)
 
 # Auto-scroll to bottom
