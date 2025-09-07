@@ -349,57 +349,53 @@ chat_css = f"""
 }}
 </style>
 """
-st.markdown("""
-<style>
-.chat-box {
-    max-height: 500px;
-    overflow-y: auto;
-    padding: 10px;
-    border-radius: 10px;
-    background: #ece5dd;
-}
-.msg-row {
-    display: flex;
-    margin: 8px 0;
-}
-.user-row {
-    justify-content: flex-end;
-}
-.ai-row {
-    justify-content: flex-start;
-}
-.chat-bubble {
-    max-width: 65%;
-    padding: 10px 14px;
-    border-radius: 15px;
-    position: relative;
-    font-size: 15px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-}
-.user-msg {
-    background: #dcf8c6;
-    color: #000;
-    border-bottom-right-radius: 2px;
-}
-.ai-msg {
-    background: #fff;
-    color: #000;
-    border-bottom-left-radius: 2px;
-}
-.profile-icon {
-    font-size: 20px;
-    margin: 0 6px;
-    align-self: flex-end;
-}
-.timestamp {
-    font-size: 11px;
-    color: #555;
-    margin-top: 4px;
-    text-align: right;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown(chat_css, unsafe_allow_html=True)
+
+# Build chat HTML
+chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
+for sender, msg, ts in st.session_state.chat_history:
+    time_str = ts.strftime("%H:%M")
+    
+    # Convert Markdown to HTML and remove outer <p> tags
+    msg_html = markdown.markdown(msg, extensions=['nl2br', 'fenced_code'])
+    msg_html = re.sub(r'^<p>(.*)</p>$', r'\1', msg_html)
+    msg_html = msg_html.replace("<p>", "").replace("</p>", "")
+    
+    if sender == "You":
+        chat_html += f"""
+        <div class='msg-row user-row'>
+            <div class='chat-bubble user-msg'>
+                {msg_html}
+                <div class='timestamp'>{time_str}</div>
+            </div>
+            <div class='profile-icon'>🧑</div>
+        </div>
+        """
+    else:
+        chat_html += f"""
+        <div class='msg-row ai-row'>
+            <div class='profile-icon'>🤖</div>
+            <div class='chat-bubble ai-msg'>
+                {msg_html}
+                <div class='timestamp'>{time_str}</div>
+            </div>
+        </div>
+        """
+chat_html += "</div>"
+
+# Render chat
+st.markdown(chat_html, unsafe_allow_html=True)
+
+# Auto-scroll to bottom
+scroll_js = f"""
+<script>
+    var chatBox = document.getElementById('{chat_box_id}');
+    if (chatBox) {{
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }}
+</script>
+"""
+st.markdown(scroll_js, unsafe_allow_html=True)
 
 # -------------------
 # Chat input
