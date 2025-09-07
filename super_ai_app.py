@@ -68,6 +68,55 @@ class LLMHelper:
         return "⚠️ No valid LLM client configured."
 
 
+# --- Custom Wrapper using InferenceClient.chat.completions ---
+class GemmaChatLLM(LLM):
+    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"  # Change to your preferred model
+    temperature: float = 0.7
+    max_tokens: int = 1024
+
+    _client: InferenceClient = PrivateAttr()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._client = InferenceClient(
+            provider="together",
+            api_key=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+        )
+
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        # Use chat completions instead of text generation
+        response = self._client.chat.completions.create(
+            model=self.model_id,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
+        )
+        #return response.choices[0].message['content']
+        # Extract only the generated message (i.e., the answer)
+        # Debug the response to inspect its structure
+        print("Response from API:", response)
+
+        try:
+            # Extract content from the message object
+            answer = response.choices[0].message.content.strip()
+            print("Answer from Response :", answer)
+            # Return the answer only
+            return answer if answer else "No valid response received"
+        except (AttributeError, KeyError, IndexError):
+            # In case the structure doesn't match, return a helpful message
+            return "Error: Unexpected response structure."
+    
+
+
+    @property
+    def _llm_type(self) -> str:
+        return "huggingface-chat"
+        
+    def ask(self, prompt: str) -> str:
+        """Wrapper so it behaves like LLMHelper.ask"""
+        return self._call(prompt)
+
+
 # -------------------
 # Streamlit UI
 # -------------------
@@ -137,7 +186,8 @@ def rule_based_ai(user_query: str) -> str:
 # GPT-powered AI
 # -------------------
 # choose provider here: "openai" or "ollama"
-llm = LLMHelper(provider="openai", model="gpt-4o-mini")
+#llm = LLMHelper(provider="openai", model="gpt-4o-mini")
+llm = GemmaChatLLM(model_id="mistralai/Mistral-7B-Instruct-v0.3")
 # llm = LLMHelper(provider="ollama", model="llama3")
 
 def gpt_ai(user_query: str) -> str:
