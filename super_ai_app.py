@@ -7,10 +7,6 @@ from typing import List, Optional
 from pydantic import PrivateAttr
 from langchain.llms.base import LLM
 from huggingface_hub import InferenceClient
-import datetime
-
-import markdown
-
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
@@ -265,132 +261,17 @@ def auto_chart(planned_price: float, basis: str):
 # -------------------
 # Chat
 # -------------------
-
-import streamlit as st
-import datetime
-import re
-import markdown
-
-
-# -------------------
-# Initialize session state
-# -------------------
+st.subheader("💬 Coconut AI Chat")
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-else:
-    # Upgrade old 2-element history to 3-element (add timestamp)
-    upgraded = []
-    for entry in st.session_state.chat_history:
-        if len(entry) == 2:
-            upgraded.append((entry[0], entry[1], datetime.datetime.now()))
-        else:
-            upgraded.append(entry)
-    st.session_state.chat_history = upgraded
 
-# -------------------
-# Chat UI
-# -------------------
-st.subheader("💬 Coconut AI Chat")
-chat_box_id = "chat-box"
-
-# CSS for WhatsApp-style chat
-chat_css = f"""
-<style>
-.chat-box {{
-    height: 450px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 10px;
-    background-color: #e5ddd5;
-    display: flex;
-    flex-direction: column;
-}}
-.msg-row {{
-    display: flex;
-    align-items: flex-end;
-    margin-bottom: 10px;
-}}
-.user-row {{ justify-content: flex-end; }}
-.ai-row {{ justify-content: flex-start; }}
-.profile-icon {{
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    margin: 0 6px;
-}}
-.chat-bubble {{
-    padding: 8px 12px;
-    border-radius: 12px;
-    max-width: 70%;
-    word-wrap: break-word;
-    white-space: pre-wrap;   /* preserves line breaks */
-    font-size: 15px;
-    position: relative;
-}}
-.user-msg {{
-    background-color: #dcf8c6;
-    border-bottom-right-radius: 0;
-}}
-.ai-msg {{
-    background-color: #fff;
-    border-bottom-left-radius: 0;
-}}
-.timestamp {{
-    font-size: 11px;
-    color: gray;
-    margin-top: 2px;
-    text-align: right;
-}}
-</style>
-"""
-st.markdown(chat_css, unsafe_allow_html=True)
-
-chat_html = "<div class='chat-box'>"
-for role, text, ts in st.session_state.chat_history:
-    timestamp = ts.strftime("%H:%M")
-    if role == "You":
-        chat_html += f"""
-        <div class='msg-row user-row'>
-            <div class='chat-bubble user-msg'>
-                {text}
-                <div class='timestamp'>{timestamp}</div>
-            </div>
-            <div class='profile-icon'>🧑</div>
-        </div>
-        """
-    else:  # AI
-        chat_html += f"""
-        <div class='msg-row ai-row'>
-            <div class='profile-icon'>🤖</div>
-            <div class='chat-bubble ai-msg'>
-                {text}
-                <div class='timestamp'>{timestamp}</div>
-            </div>
-        </div>
-        """
-chat_html += "</div>"
-
-st.markdown(chat_html, unsafe_allow_html=True)
-
-# -------------------
-# Chat input
-# -------------------
-st.markdown("---")
-user_query = st.text_input("Type a message...", key="chat_input")
+user_query = st.text_input("Ask a question...")
 
 if user_query:
-    # Generate reply
     if mode == "Normal Mode":
         reply = rule_based_ai(user_query)
     else:
         reply = gpt_ai(user_query)
-        # Auto chart if numbers in question
         if any(w in user_query.lower() for w in ["profit", "loss", "buy", "sell"]):
             nums = re.findall(r"\d+\.?\d*", user_query)
             if nums:
@@ -400,10 +281,8 @@ if user_query:
                 else:
                     auto_chart(planned_price, "kg")
 
-    now = datetime.datetime.now()
-    st.session_state.chat_history.append(("You", user_query, now))
-    st.session_state.chat_history.append(("AI", reply, now))
+    st.session_state.chat_history.append(("You", user_query))
+    st.session_state.chat_history.append(("AI", reply))
 
-    # Clear input safely and rerun
-    st.session_state.pop("chat_input", None)
-    st.rerun()
+for sender, msg in st.session_state.chat_history:
+    st.markdown(f"**{'🧑' if sender=='You' else '🤖'} {sender}:** {msg}")
