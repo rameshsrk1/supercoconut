@@ -262,10 +262,18 @@ def auto_chart(planned_price: float, basis: str):
 # Chat
 # -------------------
 st.subheader("💬 Coconut AI Chat")
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
 
-user_query = st.text_input("Ask a question...")
+# Container for chat history (scrollable)
+chat_container = st.container()
+with chat_container:
+    for sender, msg in reversed(st.session_state.chat_history):
+        st.markdown(f"**{'🧑' if sender=='You' else '🤖'} {sender}:** {msg}")
+
+# Spacer to push input box down
+st.markdown("---")
+
+# Chat input stays at bottom
+user_query = st.text_input("Ask a question...", key="chat_input")
 
 if user_query:
     if mode == "Normal Mode":
@@ -283,6 +291,4 @@ if user_query:
 
     st.session_state.chat_history.append(("You", user_query))
     st.session_state.chat_history.append(("AI", reply))
-
-for sender, msg in st.session_state.chat_history:
-    st.markdown(f"**{'🧑' if sender=='You' else '🤖'} {sender}:** {msg}")
+    st.rerun()  # refresh so latest shows immediately
