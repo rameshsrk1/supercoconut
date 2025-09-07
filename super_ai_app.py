@@ -266,6 +266,33 @@ def auto_chart(planned_price: float, basis: str):
 # Chat
 # -------------------
 
+import streamlit as st
+import datetime
+import re
+import markdown
+
+# -------------------
+# Mode selection
+# -------------------
+mode = st.radio("Select Mode:", ["Normal Mode", "DeepThink Mode"])
+
+# -------------------
+# Helper functions
+# -------------------
+def rule_based_ai(user_query):
+    # Example: simple rule-based reply
+    if "profit" in user_query.lower():
+        return "You can make a profit if buying price < fair price."
+    return "I did not understand. Try asking about fair price or profit."
+
+def gpt_ai(user_query):
+    # Placeholder for real AI call (LLM)
+    return f"AI processed your query: {user_query}"
+
+def auto_chart(price, unit="kg"):
+    # Placeholder function for generating chart
+    pass
+
 # -------------------
 # Initialize session state
 # -------------------
@@ -349,8 +376,11 @@ st.markdown(chat_css, unsafe_allow_html=True)
 chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
 for sender, msg, ts in st.session_state.chat_history:
     time_str = ts.strftime("%H:%M")
-    # Convert Markdown to HTML safely
+    
+    # Convert Markdown to HTML and remove outer <p> tags
     msg_html = markdown.markdown(msg, extensions=['nl2br', 'fenced_code'])
+    msg_html = re.sub(r'^<p>(.*)</p>$', r'\1', msg_html)
+    msg_html = msg_html.replace("<p>", "").replace("</p>", "")
     
     if sender == "You":
         chat_html += f"""
