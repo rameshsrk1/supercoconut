@@ -263,11 +263,21 @@ def auto_chart(planned_price: float, basis: str):
 # -------------------
 # Chat
 # -------------------
+
 st.subheader("💬 Coconut AI Chat")
 
-# ✅ Initialize chat history
+# ✅ Initialize chat history with timestamp support
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+else:
+    # Upgrade old 2-element history to 3-element (add timestamp)
+    upgraded = []
+    for entry in st.session_state.chat_history:
+        if len(entry) == 2:
+            upgraded.append((entry[0], entry[1], datetime.datetime.now()))
+        else:
+            upgraded.append(entry)
+    st.session_state.chat_history = upgraded
 
 chat_box_id = "chat-box"
 
@@ -280,7 +290,7 @@ chat_css = f"""
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 10px;
-    background-color: #e5ddd5; /* WhatsApp background */
+    background-color: #e5ddd5;
     display: flex;
     flex-direction: column;
 }}
@@ -289,12 +299,8 @@ chat_css = f"""
     align-items: flex-end;
     margin-bottom: 10px;
 }}
-.user-row {{
-    justify-content: flex-end;
-}}
-.ai-row {{
-    justify-content: flex-start;
-}}
+.user-row {{ justify-content: flex-end; }}
+.ai-row {{ justify-content: flex-start; }}
 .profile-icon {{
     width: 36px;
     height: 36px;
@@ -317,12 +323,10 @@ chat_css = f"""
 .user-msg {{
     background-color: #dcf8c6;
     border-bottom-right-radius: 0;
-    text-align: left;
 }}
 .ai-msg {{
     background-color: #fff;
     border-bottom-left-radius: 0;
-    text-align: left;
 }}
 .timestamp {{
     font-size: 11px;
@@ -400,6 +404,6 @@ if user_query:
     st.session_state.chat_history.append(("You", user_query, now))
     st.session_state.chat_history.append(("AI", reply, now))
 
-    # Clear input & rerun
-    st.session_state["chat_input"] = ""
+    # ✅ Clear input safely
+    st.session_state.pop("chat_input", None)
     st.experimental_rerun()
