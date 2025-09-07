@@ -263,6 +263,10 @@ def auto_chart(planned_price: float, basis: str):
 # -------------------
 st.subheader("💬 Coconut AI Chat")
 
+# ✅ Initialize chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
 # Container for chat history (scrollable)
 chat_container = st.container()
 with chat_container:
