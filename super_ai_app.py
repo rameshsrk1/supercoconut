@@ -127,9 +127,9 @@ st.set_page_config(page_title="Coconut Price Calculator + AI", layout="centered"
 st.title("🌴 Coconut Buying Price Calculator with AI Chat")
 
 # Inputs
-copra_price = st.number_input("Copra Price (₹/kg)", min_value=0.0, value=90.0, step=1.0)
-husk_price = st.number_input("Husk Price (₹/kg)", min_value=0.0, value=5.0, step=0.5)
-outturn = st.number_input("Outturn (kg of copra per 1000kg coconuts)", min_value=0.0, value=220.0, step=1.0)
+copra_price = st.number_input("Copra Price (₹/kg)", min_value=0.0, value=180.0, step=5.0)
+husk_price = st.number_input("Husk Price (₹/Piece)", min_value=0.0, value=2.0, step=0.2)
+outturn = st.number_input("Outturn (kg of copra per 100kg coconuts)", min_value=0.0, value=28.0, step=0.5)
 include_husk = st.checkbox("Include Husk Value in Calculation?", value=True)
 coconut_weight = st.number_input("Avg. Weight of One Coconut (kg)", min_value=0.1, value=1.2, step=0.1)
 
@@ -144,8 +144,8 @@ if mode == "DeepThink Mode":
 # -------------------
 # Core Calculation
 # -------------------
-copra_value = outturn * copra_price
-husk_value = 1000 * husk_price if include_husk else 0
+copra_value = 10*outturn * copra_price
+husk_value = 2000 * husk_price if include_husk else 0
 total_value = copra_value + husk_value
 fair_price_per_kg = total_value / 1000
 fair_price_per_piece = fair_price_per_kg * coconut_weight
