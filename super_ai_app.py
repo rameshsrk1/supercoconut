@@ -131,7 +131,7 @@ copra_price = st.number_input("Copra Price (₹/kg)", min_value=0.0, value=180.0
 husk_price = st.number_input("Husk Price (₹/Piece)", min_value=0.0, value=2.0, step=0.2)
 outturn = st.number_input("Outturn (kg of copra per 100kg coconuts)", min_value=0.0, value=28.0, step=0.5)
 include_husk = st.checkbox("Include Husk Value in Calculation?", value=True)
-coconut_weight = st.number_input("Avg. Weight of One Coconut (kg)", min_value=0.1, value=1.2, step=0.1)
+coconut_weight = st.number_input("Avg. Weight of One Coconut (kg)", min_value=0.3, value=.45, step=0.1)
 
 buy_price_kg = st.number_input("Planned Buying Price (₹/kg)", min_value=0.0, value=0.0, step=1.0)
 buy_price_piece = st.number_input("Planned Buying Price (₹/piece)", min_value=0.0, value=0.0, step=1.0)
