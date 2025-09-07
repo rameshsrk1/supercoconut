@@ -264,9 +264,9 @@ def auto_chart(planned_price: float, basis: str):
 # Chat
 # -------------------
 
-st.subheader("💬 Coconut AI Chat")
-
-# ✅ Initialize chat history with timestamp support
+# -------------------
+# Initialize session state
+# -------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 else:
@@ -279,9 +279,13 @@ else:
             upgraded.append(entry)
     st.session_state.chat_history = upgraded
 
+# -------------------
+# Chat UI
+# -------------------
+st.subheader("💬 Coconut AI Chat")
 chat_box_id = "chat-box"
 
-# CSS for WhatsApp-like chat
+# CSS for WhatsApp-style chat
 chat_css = f"""
 <style>
 .chat-box {{
@@ -317,6 +321,7 @@ chat_css = f"""
     border-radius: 12px;
     max-width: 70%;
     word-wrap: break-word;
+    white-space: pre-wrap;   /* preserves line breaks */
     font-size: 15px;
     position: relative;
 }}
@@ -342,11 +347,14 @@ st.markdown(chat_css, unsafe_allow_html=True)
 chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
 for sender, msg, ts in st.session_state.chat_history:
     time_str = ts.strftime("%H:%M")
+    # Convert Markdown to HTML safely
+    msg_html = markdown.markdown(msg, extensions=['nl2br', 'fenced_code'])
+    
     if sender == "You":
         chat_html += f"""
         <div class='msg-row user-row'>
             <div class='chat-bubble user-msg'>
-                {msg}
+                {msg_html}
                 <div class='timestamp'>{time_str}</div>
             </div>
             <div class='profile-icon'>🧑</div>
@@ -357,7 +365,7 @@ for sender, msg, ts in st.session_state.chat_history:
         <div class='msg-row ai-row'>
             <div class='profile-icon'>🤖</div>
             <div class='chat-bubble ai-msg'>
-                {msg}
+                {msg_html}
                 <div class='timestamp'>{time_str}</div>
             </div>
         </div>
@@ -367,7 +375,7 @@ chat_html += "</div>"
 # Render chat
 st.markdown(chat_html, unsafe_allow_html=True)
 
-# Auto-scroll script
+# Auto-scroll to bottom
 scroll_js = f"""
 <script>
     var chatBox = document.getElementById('{chat_box_id}');
@@ -378,18 +386,19 @@ scroll_js = f"""
 """
 st.markdown(scroll_js, unsafe_allow_html=True)
 
-# Spacer
-st.markdown("---")
-
+# -------------------
 # Chat input
+# -------------------
+st.markdown("---")
 user_query = st.text_input("Type a message...", key="chat_input")
 
 if user_query:
-    # AI response
+    # Generate reply
     if mode == "Normal Mode":
         reply = rule_based_ai(user_query)
     else:
         reply = gpt_ai(user_query)
+        # Auto chart if numbers in question
         if any(w in user_query.lower() for w in ["profit", "loss", "buy", "sell"]):
             nums = re.findall(r"\d+\.?\d*", user_query)
             if nums:
@@ -399,11 +408,10 @@ if user_query:
                 else:
                     auto_chart(planned_price, "kg")
 
-    # Store messages with timestamp
     now = datetime.datetime.now()
     st.session_state.chat_history.append(("You", user_query, now))
     st.session_state.chat_history.append(("AI", reply, now))
 
-    # ✅ Clear input safely
+    # Clear input safely and rerun
     st.session_state.pop("chat_input", None)
     st.rerun()
