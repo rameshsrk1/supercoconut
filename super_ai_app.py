@@ -351,24 +351,32 @@ chat_css = f"""
 """
 st.markdown(chat_css, unsafe_allow_html=True)
 
-# Inside your chat rendering section
 chat_html = "<div class='chat-box'>"
-for msg in st.session_state.messages:
-    chat_html += msg["html"]
+for role, text, ts in st.session_state.chat_history:
+    timestamp = ts.strftime("%H:%M")
+    if role == "You":
+        chat_html += f"""
+        <div class='msg-row user-row'>
+            <div class='chat-bubble user-msg'>
+                {text}
+                <div class='timestamp'>{timestamp}</div>
+            </div>
+            <div class='profile-icon'>🧑</div>
+        </div>
+        """
+    else:  # AI
+        chat_html += f"""
+        <div class='msg-row ai-row'>
+            <div class='profile-icon'>🤖</div>
+            <div class='chat-bubble ai-msg'>
+                {text}
+                <div class='timestamp'>{timestamp}</div>
+            </div>
+        </div>
+        """
 chat_html += "</div>"
 
 st.markdown(chat_html, unsafe_allow_html=True)
-
-# Auto-scroll to bottom
-scroll_js = f"""
-<script>
-    var chatBox = document.getElementById('{chat_box_id}');
-    if (chatBox) {{
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }}
-</script>
-"""
-st.markdown(scroll_js, unsafe_allow_html=True)
 
 # -------------------
 # Chat input
