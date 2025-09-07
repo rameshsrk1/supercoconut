@@ -296,5 +296,5 @@ if user_query:
     st.session_state.chat_history.append(("You", user_query))
     st.session_state.chat_history.append(("AI", reply))
    # ✅ Clear input box instead of rerun loop
-    st.session_state.chat_input = ""
-    st.experimental_rerun()
+   # st.session_state.chat_input = ""
+   # st.experimental_rerun()
