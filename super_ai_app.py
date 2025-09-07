@@ -351,34 +351,12 @@ chat_css = f"""
 """
 st.markdown(chat_css, unsafe_allow_html=True)
 
-# Final assembled chat HTML
-chat_html = f"<div id='{chat_box_id}' class='chat-box'>"
-for sender, msg, ts in st.session_state.chat_history:
-    time_str = ts.strftime("%H:%M")
-
-    if sender == "You":
-        chat_html += f"""
-        <div class='msg-row user-row'>
-            <div class='chat-bubble user-msg'>
-                {msg}
-                <div class='timestamp'>{time_str}</div>
-            </div>
-            <div class='profile-icon'>🧑</div>
-        </div>
-        """
-    else:
-        chat_html += f"""
-        <div class='msg-row ai-row'>
-            <div class='profile-icon'>🤖</div>
-            <div class='chat-bubble ai-msg'>
-                {msg}
-                <div class='timestamp'>{time_str}</div>
-            </div>
-        </div>
-        """
+# Inside your chat rendering section
+chat_html = "<div class='chat-box'>"
+for msg in st.session_state.messages:
+    chat_html += msg["html"]
 chat_html += "</div>"
 
-# ✅ Render HTML instead of showing as text
 st.markdown(chat_html, unsafe_allow_html=True)
 
 # Auto-scroll to bottom
