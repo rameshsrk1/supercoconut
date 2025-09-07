@@ -295,4 +295,6 @@ if user_query:
 
     st.session_state.chat_history.append(("You", user_query))
     st.session_state.chat_history.append(("AI", reply))
-    st.rerun()  # refresh so latest shows immediately
+   # ✅ Clear input box instead of rerun loop
+    st.session_state.chat_input = ""
+    st.experimental_rerun()
