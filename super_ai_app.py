@@ -406,4 +406,4 @@ if user_query:
 
     # ✅ Clear input safely
     st.session_state.pop("chat_input", None)
-    st.experimental_rerun()
+    st.rerun()
