@@ -3,7 +3,10 @@ import re
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from typing import List, Optional
+from pydantic import PrivateAttr
+from langchain.llms.base import LLM
+from huggingface_hub import InferenceClient
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
