@@ -72,14 +72,18 @@ class LLMHelper:
 # Streamlit UI
 # -------------------
 st.set_page_config(page_title="Coconut Price Calculator + AI", layout="centered")
-st.title("🌴 Coconut Buying Price Calculator with AI Chat")
+st.title("🌴 Coconut Fair Price Calculator with AI ")
 
 # Inputs
-copra_price = st.number_input("Copra Price (₹/kg)", min_value=0.0, value=90.0, step=1.0)
-husk_price = st.number_input("Husk Price (₹/kg)", min_value=0.0, value=5.0, step=0.5)
-outturn = st.number_input("Outturn (kg of copra per 1000kg coconuts)", min_value=0.0, value=220.0, step=1.0)
+copra_price = st.number_input("Copra Price (₹/kg)", min_value=0.0, value=200.0, step=1.0)
+husk_price = st.number_input("Husk Price (₹/Piece)", min_value=0.0, value=2.0, step=0.5)
+outturn = st.number_input("Outturn % (kg of copra per 1000kg coconuts)", min_value=0.0, value=29.0, step=1.0)
 include_husk = st.checkbox("Include Husk Value in Calculation?", value=True)
-coconut_weight = st.number_input("Avg. Weight of One Coconut (kg)", min_value=0.1, value=1.2, step=0.1)
+de_husk_labour = st.number_input("De-husking Labour Cost (₹/1000 piece)", min_value=0.0, value=700.0, step=50.0)
+Kalam_labour = st.number_input("Kalam Labour Cost (₹/1000 piece)", min_value=0.0, value=600.0, step=50.0)
+Thotti_price = st.number_input("Thotti Price (₹/Kg)", min_value=15.0, value=25.0, step=1.0)
+coconut_weight = st.number_input("Avg. Weight of One Coconut (kg)", min_value=0.3, value=0.48, step=0.05)
+
 
 buy_price_kg = st.number_input("Planned Buying Price (₹/kg)", min_value=0.0, value=0.0, step=1.0)
 buy_price_piece = st.number_input("Planned Buying Price (₹/piece)", min_value=0.0, value=0.0, step=1.0)
@@ -92,9 +96,12 @@ if mode == "DeepThink Mode":
 # -------------------
 # Core Calculation
 # -------------------
-copra_value = outturn * copra_price
-husk_value = 1000 * husk_price if include_husk else 0
-total_value = copra_value + husk_value
+copra_value = outturn * copra_price*10
+husk_value = (1000 * husk_price / coconut_weight) if include_husk else 0
+de_husk_cost = (de_husk_labour / coconut_weight)
+kalam_cost = (Kalam_labour / coconut_weight)
+Thotti_value = Thotti_price * outturn *10
+total_value = (copra_value + husk_value - (de_husk_cost + kalam_cost) + Thotti_value)
 fair_price_per_kg = total_value / 1000
 fair_price_per_piece = fair_price_per_kg * coconut_weight
 
@@ -151,7 +158,7 @@ def gpt_ai(user_query: str) -> str:
     instructions = """
     You are an AI assistant for coconut trading.
     Rules:
-    - Fair Price/kg = (outturn × copra_price + husk_value) ÷ 1000
+    - Fair Price/kg = ( copra_value + husk_value - (de_husk_cost + kalam_cost) + Thotti_value) ÷ 1000
     - Fair Price/piece = Fair Price/kg × coconut_weight
     - Profit/Loss per 1000kg = (FairPrice/kg - BuyingPrice/kg) × 1000
     - Profit/Loss per 1000kg batch (piece) = (FairPrice/piece - BuyingPrice/piece) × (1000 ÷ coconut_weight)
@@ -170,6 +177,9 @@ def gpt_ai(user_query: str) -> str:
     - Outturn = {outturn}
     - Copra Price = ₹{copra_price}
     - Husk Value = ₹{husk_value}
+    - de_husk_cost = ₹{de_husk_cost}
+    - kalam_cost = ₹{kalam_cost}
+    - Thotti_value = ₹{Thotti_value}
     - Fair Price = ₹{fair_price_per_kg:.2f}/kg OR ₹{fair_price_per_piece:.2f}/piece
     - Coconut Weight = {coconut_weight} kg
 
