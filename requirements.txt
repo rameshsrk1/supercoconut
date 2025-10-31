@@ -5,6 +5,6 @@ pyyaml
 openai
 requests
 huggingface-hub
-langchain
+langchain-community
 pydantic
 markdown
