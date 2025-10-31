@@ -5,7 +5,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import List, Optional
 from pydantic import PrivateAttr
-from langchain_community.llms.base import LLM
+
+# LangChain imports (new structure as of v0.2.16+)
+from langchain_core.language_models.llms import LLM
+from langchain_community.llms import HuggingFaceHub
 from huggingface_hub import InferenceClient
 # -------------------
 # LLM Helper (OpenAI + Ollama)
