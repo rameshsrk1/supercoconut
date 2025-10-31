@@ -74,17 +74,18 @@ class LLMHelper:
         return "⚠️ No valid LLM client configured."
 # --- Custom Wrapper using InferenceClient.chat.completions ---
 class GemmaChatLLM(LLM):
-    model_id: str = "google/gemma-2b-it"  # ✅ example HF chat model
+    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
     temperature: float = 0.7
-    max_new_tokens: int = 512
-    _client: InferenceClient = PrivateAttr()
+    max_tokens: int = 1024
+
+    # Proper way to declare a private attribute
+    _client: InferenceClient = PrivateAttr(default=None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # ✅ Just pass model ID and token, not provider
         self._client = InferenceClient(
-            model=self.model_id,
-            token=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+            provider="together",
+            api_key=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
         )
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
