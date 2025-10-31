@@ -5,6 +5,8 @@ pyyaml
 openai
 requests
 huggingface-hub
-langchain-community
+langchain==0.2.12
+langchain-community==0.2.12
+langchain-openai==0.2.12
 pydantic
 markdown
