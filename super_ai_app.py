@@ -75,42 +75,54 @@ class LLMHelper:
         return "⚠️ No valid LLM client configured."
 # --- Custom Wrapper using InferenceClient.chat.completions ---
 class GemmaChatLLM(LLM):
-    model_id: str = Field(default="mistralai/Mistral-7B-Instruct-v0.3")
+    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
     temperature: float = 0.7
-    max_new_tokens: int = 512
-    huggingface_token: Optional[str] = None
+    max_tokens: int = 1024
 
-    def __init__(self, **data):
-        # Load token from Streamlit secrets if not provided
-        if "huggingface_token" not in data or data["huggingface_token"] is None:
-            data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+    _client: InferenceClient = PrivateAttr()
 
-        super().__init__(**data)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        # Initialize client (standard HF inference)
-        object.__setattr__(
-            self,
-            "_client",
-            InferenceClient(token=self.huggingface_token)
+        api_key = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+
+        # ✅ Use Together provider (works for Mistral models)
+        self._client = InferenceClient(
+            provider="together",
+            api_key=api_key
         )
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        """Call the HF text-generation endpoint (safest and supported for Mistral)."""
+        """Send prompt to Together chat completion endpoint."""
         try:
-            response = self._client.text_generation(
+            response = self._client.chat.completions.create(
                 model=self.model_id,
-                prompt=prompt,
+                messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
-                max_new_tokens=self.max_new_tokens,
+                max_tokens=self.max_tokens,
             )
-            # text_generation returns plain text, not JSON
-            return response.strip()
+
+            # ✅ Extract generated text safely
+            if response and hasattr(response, "choices"):
+                msg = response.choices[0].message
+                if isinstance(msg, dict) and "content" in msg:
+                    return msg["content"].strip()
+                elif hasattr(msg, "content"):
+                    return msg.content.strip()
+
+            return "No valid response received"
+
         except Exception as e:
-            raise RuntimeError(f"Hugging Face call failed: {e}")
+            print(f"[Error] Together API call failed: {e}")
+            return f"Error: {e}"
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-text-generation"
+        return "huggingface-chat"
+
+    def ask(self, prompt: str) -> str:
+        """Simple wrapper to mimic LLMHelper.ask()"""
+        return self._call(prompt)
 
 # -------------------
 # Streamlit UI
