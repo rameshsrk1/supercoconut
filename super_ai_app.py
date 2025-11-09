@@ -83,6 +83,7 @@ class GemmaChatLLM(LLM):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._init_private_attributes()
         self._client = InferenceClient(
             provider="together",
             api_key=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
