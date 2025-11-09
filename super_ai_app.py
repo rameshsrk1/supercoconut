@@ -80,21 +80,25 @@ class GemmaChatLLM(LLM):
     temperature: float = 0.7
     max_tokens: int = 1024
 
-    _client: InferenceClient = PrivateAttr()
+    # ✅ Define private attribute explicitly (required in Pydantic v2+)
+    _client: Optional[InferenceClient] = PrivateAttr(default=None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         api_key = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
-        # ✅ Use Together provider (works for Mistral models)
-        self._client = InferenceClient(
+        # ✅ Use Together.ai provider — works well for Mistral models
+        client = InferenceClient(
             provider="together",
             api_key=api_key
         )
 
+        # ✅ Assign to PrivateAttr safely
+        object.__setattr__(self, "_client", client)
+
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        """Send prompt to Together chat completion endpoint."""
+        """Send a chat-style prompt to Together Inference endpoint."""
         try:
             response = self._client.chat.completions.create(
                 model=self.model_id,
@@ -103,7 +107,7 @@ class GemmaChatLLM(LLM):
                 max_tokens=self.max_tokens,
             )
 
-            # ✅ Extract generated text safely
+            # ✅ Extract message content safely
             if response and hasattr(response, "choices"):
                 msg = response.choices[0].message
                 if isinstance(msg, dict) and "content" in msg:
@@ -111,7 +115,7 @@ class GemmaChatLLM(LLM):
                 elif hasattr(msg, "content"):
                     return msg.content.strip()
 
-            return "No valid response received"
+            return "No valid response received."
 
         except Exception as e:
             print(f"[Error] Together API call failed: {e}")
@@ -122,9 +126,8 @@ class GemmaChatLLM(LLM):
         return "huggingface-chat"
 
     def ask(self, prompt: str) -> str:
-        """Simple wrapper to mimic LLMHelper.ask()"""
+        """Simple wrapper so it behaves like LLMHelper.ask()"""
         return self._call(prompt)
-
 # -------------------
 # Streamlit UI
 # -------------------
