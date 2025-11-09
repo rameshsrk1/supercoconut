@@ -3,13 +3,15 @@ import re
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import List, Optional
-from pydantic import PrivateAttr
 
 # LangChain imports (new structure as of v0.2.16+)
-from langchain_core.language_models.llms import LLM
 from langchain_community.llms import HuggingFaceHub
+
+
+from langchain_core.language_models.llms import LLM
 from huggingface_hub import InferenceClient
+from pydantic import BaseModel, Field
+from typing import Optional, List
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
@@ -73,35 +75,30 @@ class LLMHelper:
 
         return "⚠️ No valid LLM client configured."
 # --- Custom Wrapper using InferenceClient.chat.completions ---
-class GemmaChatLLM(LLM):
-    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+class GemmaChatLLM(LLM, BaseModel):
+    model_id: str = Field(default="mistralai/Mistral-7B-Instruct-v0.3")
     temperature: float = 0.7
-    max_tokens: int = 1024
+    max_new_tokens: int = 512
+    huggingface_token: Optional[str] = None
 
+    # ✅ Normal Python attribute, not a Pydantic field
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._client = InferenceClient(
-            api_key=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
-        )
+        self._client = InferenceClient(model=self.model_id, token=self.huggingface_token)
 
+    # ✅ Required by LangChain to return text output
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        try:
-            response = self._client.text_generation(
-                prompt,
-                max_new_tokens=self.max_tokens,  # use `max_tokens`, not `max_new_tokens`
-                temperature=self.temperature,
-                stream=False
-            )
-            return response.strip()
-        except Exception as e:
-            return f"⚠️ HF Error: {e}"
+        completion = self._client.text_generation(
+            prompt,
+            max_new_tokens=self.max_new_tokens,
+            temperature=self.temperature,
+            stop_sequences=stop,
+        )
+        return completion
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-llm"
-
-    def ask(self, prompt: str) -> str:
-        return self._call(prompt)
+        return "huggingface-inference"
 
 # -------------------
 # Streamlit UI
