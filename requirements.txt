@@ -6,6 +6,6 @@ openai
 requests
 huggingface-hub
 langchain==0.2.16
-langchain-community==0.2.16
-pydantic
+langchain-community==0.2.6
+pydantic==2.6.4
 markdown
