@@ -4,10 +4,11 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import List, Optional
-from pydantic import Field, model_validator
+from pydantic import Field
 from langchain_core.language_models.llms import LLM
-from langchain_community.llms import HuggingFaceHub
 from huggingface_hub import InferenceClient
+
+
 
 
 # -------------------
@@ -79,25 +80,25 @@ class GemmaChatLLM(LLM):
     max_new_tokens: int = 512
     huggingface_token: Optional[str] = None
 
-    # ✅ This runs *after* Pydantic validation
-    @model_validator(mode="after")
-    def setup_client(self):
+    # ✅ Override __init__ safely (do NOT call super().__init__)
+    def __init__(self, **data):
+        # Let Pydantic initialize fields
+        super().__init__(**data)
+        # Bypass Pydantic’s tracking system for _client
         object.__setattr__(
             self,
             "_client",
             InferenceClient(model=self.model_id, token=self.huggingface_token)
         )
-        return self
 
-    # ✅ Required LangChain method
+    # ✅ Required LangChain API
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        completion = self._client.text_generation(
+        return self._client.text_generation(
             prompt,
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
             stop_sequences=stop,
         )
-        return completion
 
     @property
     def _llm_type(self) -> str:
