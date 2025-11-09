@@ -77,7 +77,7 @@ class LLMHelper:
 class GemmaChatLLM(LLM):
     model_id: str = Field(default="mistralai/Mistral-7B-Instruct-v0.3")
     temperature: float = 0.7
-    max_new_tokens: int = 512
+    max_tokens: int = 512
     huggingface_token: Optional[str] = None
 
     def __init__(self, **data):
