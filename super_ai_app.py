@@ -80,31 +80,32 @@ class GemmaChatLLM(LLM):
     max_new_tokens: int = 512
     huggingface_token: Optional[str] = None
 
-    # ✅ Override __init__ safely (do NOT call super().__init__)
     def __init__(self, **data):
+        # Load token from Streamlit secrets if not explicitly passed
         if "huggingface_token" not in data or data["huggingface_token"] is None:
             data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
-            # Let Pydantic initialize fields
+
         super().__init__(**data)
-        # Bypass Pydantic’s tracking system for _client
+
         object.__setattr__(
             self,
             "_client",
             InferenceClient(model=self.model_id, token=self.huggingface_token)
         )
 
-    # ✅ Required LangChain API
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        return self._client.text_generation(
-            prompt,
+        # Use chat-based API for conversational models
+        completion = self._client.chat_completion(
+            model=self.model_id,
+            messages=[{"role": "user", "content": prompt}],
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
-            stop_sequences=stop,
         )
+        return completion.choices[0].message["content"]
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-inference"
+        return "huggingface-conversational"
 
 # -------------------
 # Streamlit UI
