@@ -77,16 +77,15 @@ class LLMHelper:
 class GemmaChatLLM(LLM):
     model_id: str = Field(default="mistralai/Mistral-7B-Instruct-v0.3")
     temperature: float = 0.7
-    max_tokens: int = 512
+    max_new_tokens: int = 512
     huggingface_token: Optional[str] = None
 
     def __init__(self, **data):
-        # Load token from Streamlit secrets if not explicitly passed
+        # Load token from Streamlit secrets if not provided
         if "huggingface_token" not in data or data["huggingface_token"] is None:
             data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
         super().__init__(**data)
-
         object.__setattr__(
             self,
             "_client",
@@ -94,18 +93,29 @@ class GemmaChatLLM(LLM):
         )
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        # Use chat-based API for conversational models
-        completion = self._client.chat_completion(
-            model=self.model_id,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=self.max_tokens, 
-            temperature=self.temperature,
-        )
-        return completion.choices[0].message["content"]
+        try:
+            # Try conversational mode first
+            completion = self._client.chat_completion(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.max_new_tokens,
+                temperature=self.temperature,
+            )
+            return completion.choices[0].message["content"]
+
+        except Exception as e:
+            # If chat mode fails, fall back to text-generation
+            print(f"[Info] Falling back to text-generation due to: {e}")
+            completion = self._client.text_generation(
+                prompt,
+                max_new_tokens=self.max_new_tokens,
+                temperature=self.temperature,
+            )
+            return completion
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-conversational"
+        return "huggingface-universal"
 
 # -------------------
 # Streamlit UI
