@@ -81,37 +81,36 @@ class GemmaChatLLM(LLM):
     huggingface_token: Optional[str] = None
 
     def __init__(self, **data):
+        # Load token from Streamlit secrets if not provided
         if "huggingface_token" not in data or data["huggingface_token"] is None:
             data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
         super().__init__(**data)
+
+        # Initialize client (standard HF inference)
         object.__setattr__(
             self,
             "_client",
-            InferenceClient(model=self.model_id, token=self.huggingface_token)
+            InferenceClient(token=self.huggingface_token)
         )
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        """Call the HF text-generation endpoint (safest and supported for Mistral)."""
         try:
-            # ✅ Use the correct 'conversational' endpoint
-            completion = self._client.conversational(
-                inputs=prompt,
-                parameters={
-                    "temperature": self.temperature,
-                    "max_new_tokens": self.max_new_tokens,
-                }
+            response = self._client.text_generation(
+                model=self.model_id,
+                prompt=prompt,
+                temperature=self.temperature,
+                max_new_tokens=self.max_new_tokens,
             )
-            # For conversational, text is returned under 'generated_text'
-            return completion.get("generated_text", "")
-
+            # text_generation returns plain text, not JSON
+            return response.strip()
         except Exception as e:
-            print(f"[Error] Conversational call failed: {e}")
-            raise e
+            raise RuntimeError(f"Hugging Face call failed: {e}")
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-conversational"
-        
+        return "huggingface-text-generation"
 
 # -------------------
 # Streamlit UI
