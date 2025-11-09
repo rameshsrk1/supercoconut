@@ -82,7 +82,9 @@ class GemmaChatLLM(LLM):
 
     # ✅ Override __init__ safely (do NOT call super().__init__)
     def __init__(self, **data):
-        # Let Pydantic initialize fields
+        if "huggingface_token" not in data or data["huggingface_token"] is None:
+            data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+            # Let Pydantic initialize fields
         super().__init__(**data)
         # Bypass Pydantic’s tracking system for _client
         object.__setattr__(
