@@ -7,5 +7,5 @@ requests
 huggingface-hub
 langchain==0.2.16
 langchain-community==0.2.6
-pydantic==2.6.4
+pydantic>=2.7.4,<3.0.0
 markdown
