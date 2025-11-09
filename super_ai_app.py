@@ -7,6 +7,7 @@ from typing import List, Optional
 from pydantic import Field
 from langchain_core.language_models.llms import LLM
 from huggingface_hub import InferenceClient
+from pydantic import PrivateAttr
 
 
 
