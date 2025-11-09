@@ -3,15 +3,13 @@ import re
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# LangChain imports (new structure as of v0.2.16+)
-from langchain_community.llms import HuggingFaceHub
-
-
+from typing import List, Optional
+from pydantic import Field, model_validator
 from langchain_core.language_models.llms import LLM
+from langchain_community.llms import HuggingFaceHub
 from huggingface_hub import InferenceClient
-from pydantic import BaseModel, Field
-from typing import Optional, List
+
+
 # -------------------
 # LLM Helper (OpenAI + Ollama)
 # -------------------
@@ -81,12 +79,17 @@ class GemmaChatLLM(LLM):
     max_new_tokens: int = 512
     huggingface_token: Optional[str] = None
 
-    # ✅ Normal Python attribute, not a Pydantic field
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._client = InferenceClient(model=self.model_id, token=self.huggingface_token)
+    # ✅ This runs *after* Pydantic validation
+    @model_validator(mode="after")
+    def setup_client(self):
+        object.__setattr__(
+            self,
+            "_client",
+            InferenceClient(model=self.model_id, token=self.huggingface_token)
+        )
+        return self
 
-    # ✅ Required by LangChain to return text output
+    # ✅ Required LangChain method
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         completion = self._client.text_generation(
             prompt,
