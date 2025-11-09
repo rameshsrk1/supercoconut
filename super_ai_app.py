@@ -98,7 +98,7 @@ class GemmaChatLLM(LLM):
         completion = self._client.chat_completion(
             model=self.model_id,
             messages=[{"role": "user", "content": prompt}],
-            max_new_tokens=self.max_new_tokens,
+            max_tokens=self.max_tokens, 
             temperature=self.temperature,
         )
         return completion.choices[0].message["content"]
