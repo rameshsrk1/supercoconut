@@ -81,7 +81,6 @@ class GemmaChatLLM(LLM):
     huggingface_token: Optional[str] = None
 
     def __init__(self, **data):
-        # Load token from Streamlit secrets if not provided
         if "huggingface_token" not in data or data["huggingface_token"] is None:
             data["huggingface_token"] = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
@@ -94,28 +93,25 @@ class GemmaChatLLM(LLM):
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         try:
-            # Try conversational mode first
-            completion = self._client.chat_completion(
-                model=self.model_id,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.max_new_tokens,
-                temperature=self.temperature,
+            # ✅ Use the correct 'conversational' endpoint
+            completion = self._client.conversational(
+                inputs=prompt,
+                parameters={
+                    "temperature": self.temperature,
+                    "max_new_tokens": self.max_new_tokens,
+                }
             )
-            return completion.choices[0].message["content"]
+            # For conversational, text is returned under 'generated_text'
+            return completion.get("generated_text", "")
 
         except Exception as e:
-            # If chat mode fails, fall back to text-generation
-            print(f"[Info] Falling back to text-generation due to: {e}")
-            completion = self._client.text_generation(
-                prompt,
-                max_new_tokens=self.max_new_tokens,
-                temperature=self.temperature,
-            )
-            return completion
+            print(f"[Error] Conversational call failed: {e}")
+            raise e
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface-universal"
+        return "huggingface-conversational"
+        
 
 # -------------------
 # Streamlit UI
