@@ -78,23 +78,17 @@ class GemmaChatLLM(LLM):
     temperature: float = 0.7
     max_tokens: int = 1024
 
-    # Proper way to declare a private attribute
-    _client: InferenceClient = PrivateAttr(default=None)
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._init_private_attributes()
         self._client = InferenceClient(
-            provider="together",
             api_key=st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
         )
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         try:
-            # ✅ Use text-generation pipeline endpoint (not chat.completions)
             response = self._client.text_generation(
                 prompt,
-                max_new_tokens=self.max_new_tokens,
+                max_new_tokens=self.max_tokens,  # use `max_tokens`, not `max_new_tokens`
                 temperature=self.temperature,
                 stream=False
             )
