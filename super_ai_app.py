@@ -224,7 +224,7 @@ def gpt_ai(user_query: str) -> str:
     ### User Question:
     {user_query}
     """
-    return llm.ask(prompt)
+    return llm.invoke(prompt)
 
 # -------------------
 # Auto Chart for DeepThink
