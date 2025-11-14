@@ -91,8 +91,8 @@ class GemmaChatLLM(LLM):
 
         # ✅ Use Together.ai provider — works well for Mistral models
         client = InferenceClient(
-            provider="together",
-            api_key=api_key
+        model="mistralai/Mistral-7B-Instruct-v0.3",
+        token=api_key
         )
 
         # ✅ Assign to PrivateAttr safely
