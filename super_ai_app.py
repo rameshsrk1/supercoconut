@@ -5,9 +5,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import List, Optional
 from pydantic import Field
-from langchain_core.language_models.llms import LLM
+#from langchain_core.language_models.llms import LLM
 from huggingface_hub import InferenceClient
 from pydantic import PrivateAttr
+
+from langchain.llms.base import LLM
+
 
 
 
@@ -74,14 +77,11 @@ class LLMHelper:
                 return f"⚠️ Ollama error: {e}"
 
         return "⚠️ No valid LLM client configured."
-# --- Custom Wrapper using InferenceClient.chat.completions ---
 class GemmaChatLLM(LLM):
     model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
-    #model_id="meta-llama/Meta-Llama-3-8B-Instruct"
     temperature: float = 0.7
     max_tokens: int = 1024
 
-    # ✅ Define private attribute explicitly (required in Pydantic v2+)
     _client: Optional[InferenceClient] = PrivateAttr(default=None)
 
     def __init__(self, **kwargs):
@@ -89,46 +89,29 @@ class GemmaChatLLM(LLM):
 
         api_key = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
-        # ✅ Use Together.ai provider — works well for Mistral models
         client = InferenceClient(
-        model="mistralai/Mistral-7B-Instruct-v0.3",
-        token=api_key
+            model=self.model_id,
+            token=api_key
         )
 
-        # ✅ Assign to PrivateAttr safely
         object.__setattr__(self, "_client", client)
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        """Send a chat-style prompt to Together Inference endpoint."""
         try:
-            response = self._client.chat.completions.create(
-                model=self.model_id,
+            response = self._client.chat_completion(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
             )
-
-            # ✅ Extract message content safely
-            if response and hasattr(response, "choices"):
-                msg = response.choices[0].message
-                if isinstance(msg, dict) and "content" in msg:
-                    return msg["content"].strip()
-                elif hasattr(msg, "content"):
-                    return msg.content.strip()
-
-            return "No valid response received."
+            return response["choices"][0]["message"]["content"].strip()
 
         except Exception as e:
-            print(f"[Error] Together API call failed: {e}")
+            print(f"[Error] HF API call failed: {e}")
             return f"Error: {e}"
 
     @property
     def _llm_type(self) -> str:
         return "huggingface-chat"
-
-    def ask(self, prompt: str) -> str:
-        """Simple wrapper so it behaves like LLMHelper.ask()"""
-        return self._call(prompt)
 # -------------------
 # Streamlit UI
 # -------------------
