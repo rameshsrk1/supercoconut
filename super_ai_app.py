@@ -76,7 +76,8 @@ class LLMHelper:
         return "⚠️ No valid LLM client configured."
 # --- Custom Wrapper using InferenceClient.chat.completions ---
 class GemmaChatLLM(LLM):
-    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    #model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    model_id="meta-llama/Meta-Llama-3-8B-Instruct"
     temperature: float = 0.7
     max_tokens: int = 1024
 
