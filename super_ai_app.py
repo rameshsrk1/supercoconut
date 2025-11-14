@@ -78,7 +78,7 @@ class LLMHelper:
 
         return "⚠️ No valid LLM client configured."
 class GemmaChatLLM(LLM):
-    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    model_id: str = "meta-llama/Llama-3.1-8B-Instruct"     # match client model
     temperature: float = 0.7
     max_tokens: int = 1024
 
@@ -89,29 +89,41 @@ class GemmaChatLLM(LLM):
 
         api_key = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
+        # Create HF inference client
         client = InferenceClient(
-            model=self.model_id,
+            self.model_id,
             token=api_key
         )
 
+        # Simple test call
+        resp = client.chat.completions.create(
+            messages=[{"role": "user", "content": "Hello, explain PCIe in simple words"}]
+        )
+
+        print(resp.choices[0].message["content"])
+
         object.__setattr__(self, "_client", client)
+
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         try:
-            response = self._client.chat_completion(
+            response = self._client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
             )
-            return response["choices"][0]["message"]["content"].strip()
+
+            return response.choices[0].message["content"].strip()
 
         except Exception as e:
             print(f"[Error] HF API call failed: {e}")
             return f"Error: {e}"
 
+
     @property
     def _llm_type(self) -> str:
         return "huggingface-chat"
+        
 # -------------------
 # Streamlit UI
 # -------------------
