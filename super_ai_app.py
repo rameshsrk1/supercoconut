@@ -76,8 +76,8 @@ class LLMHelper:
         return "⚠️ No valid LLM client configured."
 # --- Custom Wrapper using InferenceClient.chat.completions ---
 class GemmaChatLLM(LLM):
-    #model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
-    model_id="meta-llama/Meta-Llama-3-8B-Instruct"
+    model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    #model_id="meta-llama/Meta-Llama-3-8B-Instruct"
     temperature: float = 0.7
     max_tokens: int = 1024
 
@@ -205,7 +205,7 @@ def rule_based_ai(user_query: str) -> str:
 # GPT-powered AI
 # -------------------
 # choose provider here: "openai" or "ollama"
-llm = GemmaChatLLM(model_id="meta-llama/Meta-Llama-3-8B-Instruct")
+llm = GemmaChatLLM(model_id="mistralai/Mistral-7B-Instruct-v0.3")
 #llm = LLMHelper(provider="openai", model="gpt-4o-mini")
 # llm = LLMHelper(provider="ollama", model="llama3")
 
