@@ -121,7 +121,7 @@ def rule_based_ai(user_query: str) -> str:
 # --- OpenAI Chat LLM ---
 class GemmaChatLLM:
     def __init__(self, model_id="gpt-4o-mini"):
-        api_key = os.getenv("OPENAI_API_KEY") or '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'
+        api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
         openai.api_key = api_key
         #self.client = OpenAI(api_key=api_key)
         self.model_id = model_id
