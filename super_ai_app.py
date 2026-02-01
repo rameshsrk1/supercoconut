@@ -195,7 +195,7 @@ def gpt_ai(user_query: str) -> str:
     """
 
     # Assemble messages: system, then full chat, then latest user input
-    #messages = [{"role": "system", "content": system_instructions}]
+    messages = [{"role": "system", "content": "you are a helpful, precise coconut pricing assistant."}]
 
     for user, ai in st.session_state.get("chat_history", []):
         messages.append({"role": "user", "content": user})
