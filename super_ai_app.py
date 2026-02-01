@@ -195,13 +195,13 @@ def gpt_ai(user_query: str) -> str:
     """
 
     # Assemble messages: system, then full chat, then latest user input
-    messages = [{"role": "system", "content": system_instructions}]
+    #messages = [{"role": "system", "content": system_instructions}]
 
     for user, ai in st.session_state.get("chat_history", []):
         messages.append({"role": "user", "content": user})
         messages.append({"role": "assistant", "content": ai})
     # Add current user input as last message
-    messages.append({"role": "user", "content": user_query})
+    messages.append({"role": "user", "content": prompt })
 
 
     return llm._call(messages)
